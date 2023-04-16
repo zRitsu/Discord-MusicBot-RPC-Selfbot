@@ -98,74 +98,79 @@ class MyClient(discord.Client):
 
                     async for msg in ws:
 
-                        if msg.type == aiohttp.WSMsgType.TEXT:
+                        try:
 
-                            try:
-                                data = json.loads(msg.data)
-                            except Exception:
-                                traceback.print_exc()
-                                continue
+                            if msg.type == aiohttp.WSMsgType.TEXT:
 
-                            try:
-                                if not data['op']:
-                                    print(data)
+                                try:
+                                    data = json.loads(msg.data)
+                                except Exception:
+                                    traceback.print_exc()
                                     continue
-                            except:
-                                traceback.print_exc()
-                                continue
 
-                            bot_id = data.pop("bot_id", None)
+                                try:
+                                    if not data['op']:
+                                        print(data)
+                                        continue
+                                except:
+                                    traceback.print_exc()
+                                    continue
 
-                            bot_name = data.get("bot_name", "")
+                                bot_id = data.pop("bot_id", None)
 
-                            if data['op'] == "disconnect":
-                                print(f"op: {data['op']} | {environ['RPC_URL']} | reason: {data.get('reason')}")
-                                self.closing = True
-                                await ws.close()
+                                bot_name = data.get("bot_name", "")
+
+                                if data['op'] == "disconnect":
+                                    print(f"op: {data['op']} | {environ['RPC_URL']} | reason: {data.get('reason')}")
+                                    self.closing = True
+                                    await ws.close()
+                                    return
+
+                                user_ws = data.pop("user", None)
+
+                                if user_ws != self.user.id:
+                                    return
+
+                                if data['op'] == "exception":
+                                    print(f"op: {data['op']} | "
+                                          f"bot: {(bot_name + ' ') if bot_name else ''}[{bot_id}] | "
+                                          f"\nerror: {data.get('message')}")
+                                    continue
+
+                                print(f"op: {data['op']} | bot: {(bot_name + ' ') if bot_name else ''}[{bot_id}]")
+
+                                try:
+                                    del data["token"]
+                                except KeyError:
+                                    pass
+
+                                await self.process_data(user_ws, bot_id, data)
+
+                            elif msg.type in (aiohttp.WSMsgType.CLOSED,
+                                              aiohttp.WSMsgType.CLOSING,
+                                              aiohttp.WSMsgType.CLOSE):
+
+                                print(f"Conexão finalizada com o servidor: {environ['RPC_URL']}")
                                 return
 
-                            user_ws = data.pop("user", None)
+                            elif msg.type == aiohttp.WSMsgType.ERROR:
 
-                            if user_ws != self.user.id:
-                                return
+                                await self.change_presence(activity=None)
 
-                            if data['op'] == "exception":
-                                print(f"op: {data['op']} | "
-                                      f"bot: {(bot_name + ' ') if bot_name else ''}[{bot_id}] | "
-                                      f"\nerror: {data.get('message')}")
-                                continue
+                                if self.closing:
+                                    return
 
-                            print(f"op: {data['op']} | bot: {(bot_name + ' ') if bot_name else ''}[{bot_id}]")
+                                print(
+                                    f"Conexão perdida com o servidor: {environ['RPC_URL']} | Reconectando em {time_format(backoff)} seg. {repr(ws.exception())}")
 
-                            try:
-                                del data["token"]
-                            except KeyError:
-                                pass
+                                await asyncio.sleep(backoff)
+                                backoff *= 1.3
 
-                            await self.process_data(user_ws, bot_id, data)
+                            else:
+                                print(f"Unknow message type: {msg.type}")
 
-                        elif msg.type in (aiohttp.WSMsgType.CLOSED,
-                                          aiohttp.WSMsgType.CLOSING,
-                                          aiohttp.WSMsgType.CLOSE):
-
-                            print(f"Conexão finalizada com o servidor: {environ['RPC_URL']}")
-                            return
-
-                        elif msg.type == aiohttp.WSMsgType.ERROR:
-
-                            await self.change_presence(activity=None)
-
-                            if self.closing:
-                                return
-
-                            print(
-                                f"Conexão perdida com o servidor: {environ['RPC_URL']} | Reconectando em {time_format(backoff)} seg. {repr(ws.exception())}")
-
-                            await asyncio.sleep(backoff)
-                            backoff *= 1.3
-
-                        else:
-                            print(f"Unknow message type: {msg.type}")
+                        except:
+                            traceback.print_exc()
 
                     print(
                         f"Desconectado: {environ['RPC_URL']} | Nova tentativa de conexão em "
