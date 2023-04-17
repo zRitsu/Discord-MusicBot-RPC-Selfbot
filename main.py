@@ -447,7 +447,7 @@ class MyClient(discord.Client):
 
         try:
 
-            if environ["BLOCK_OTHER_USERS_TRACK"].lower() == "true" and track and track["requester_id"] != user_id:
+            if BLOCK_OTHER_USERS_TRACK == "true" and track and track["requester_id"] != user_id:
                 await self.change_presence(activity=None)
             else:
                 await self.change_presence(activity=activity)
