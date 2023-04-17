@@ -42,7 +42,7 @@ def time_format(milliseconds: Union[int, float]) -> str:
 
 class Assets:
     pause = "https://i.ibb.co/mDBMnH8/pause.png"
-    loop = "https://cdn.discordapp.com/emojis/912965656624889916.gif"
+    loop = "https://i.ibb.co/5Mj4HjT/loop-track.gif"
     loop_queue = "https://i.ibb.co/5Mj4HjT/loop-track.gif"
     stream = "https://i.ibb.co/Qf9BSQb/stream.png"
     idle = "https://i.ibb.co/6XS6qLy/music-img.png"
@@ -417,17 +417,16 @@ class MyClient(discord.Client):
                 for d in resp:
                     if d['url'] == payload["assets"]["large_image"]:
                         self.last_large_image = f'mp:{d["external_asset_path"]}'
+                        payload["assets"]["large_image"] = self.last_large_image
                     elif d['url'] == payload["assets"]["small_image"]:
                         self.last_small_image = f'mp:{d["external_asset_path"]}'
-
-                payload["assets"].update({
-                    "large_image": self.last_large_image,
-                    "small_image": self.last_small_image,
-                })
+                        payload["assets"]["small_image"] = self.last_small_image
 
         else:
             self.last_large_image = payload["assets"]["large_image"]
             self.last_small_image = payload["assets"]["small_image"]
+
+        pprint.pprint(payload)
 
         button_labels = []
         button_urls = []
