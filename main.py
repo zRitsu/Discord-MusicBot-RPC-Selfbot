@@ -8,14 +8,18 @@ from typing import Union
 
 import aiohttp
 import discord
+from aiohttp import web
 from dotenv import load_dotenv
-
-from keep_alive import keep_alive
 
 load_dotenv()
 
 version = "2.6.1"
 
+async def index(request):
+    return web.Response(text="Hello!")
+
+app = web.Application()
+app.add_routes([web.get('/', index)])
 
 def time_format(milliseconds: Union[int, float]) -> str:
     minutes, seconds = divmod(int(milliseconds / 1000), 60)
@@ -69,6 +73,7 @@ class MyClient(discord.Client):
         self.last_small_image = ""
         if not self.started:
             self.started = True
+            self.loop.create_task(web._run_app(app, host="localhost", port=environ.get("PORT", 80)))
             await self.connect_rpc_ws()
 
     async def connect_rpc_ws(self):
@@ -481,7 +486,6 @@ class MyClient(discord.Client):
 
         return payload
 
-keep_alive()
 
 client = MyClient()
 client.run(environ["TOKEN"])
