@@ -426,8 +426,6 @@ class MyClient(discord.Client):
             self.last_large_image = payload["assets"]["large_image"]
             self.last_small_image = payload["assets"]["small_image"]
 
-        pprint.pprint(payload)
-
         button_labels = []
         button_urls = []
 
