@@ -76,7 +76,7 @@ class MyClient(discord.Client):
         self.last_small_image = ""
         if not self.started:
             self.started = True
-            self.loop.create_task(web._run_app(app, host="localhost", port=environ.get("PORT", 80)))
+            self.loop.create_task(web._run_app(app, host="0.0.0.0", port=environ.get("PORT", 80)))
             await self.connect_rpc_ws()
 
     async def connect_rpc_ws(self):
