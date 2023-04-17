@@ -379,7 +379,7 @@ class MyClient(discord.Client):
 
         external_assets = []
 
-        payload["assets"] = {
+        payload["assets"].update({
             "large_image": payload["assets"]["large_image"].replace(
                 "https://media.discordapp.net/", "mp:attachments/"
             ).replace(
@@ -390,7 +390,7 @@ class MyClient(discord.Client):
             ).replace(
                 "https://cdn.discordapp.com/", "mp:attachments/"
             ),
-        }
+        })
 
         if not payload["assets"]["large_image"].startswith("mp:attachments/") and payload["assets"][
             "large_image"] != self.last_large_image:
@@ -423,10 +423,10 @@ class MyClient(discord.Client):
                     elif d['url'] == payload["assets"]["small_image"]:
                         self.last_small_image = f'mp:{d["external_asset_path"]}'
 
-                payload["assets"] = {
+                payload["assets"].update({
                     "large_image": self.last_large_image,
                     "small_image": self.last_small_image,
-                }
+                })
 
         else:
             self.last_large_image = payload["assets"]["large_image"]
