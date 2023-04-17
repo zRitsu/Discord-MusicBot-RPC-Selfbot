@@ -15,6 +15,9 @@ load_dotenv()
 
 version = "2.6.1"
 
+BLOCK_OTHER_USERS_TRACK = environ.get("BLOCK_OTHER_USERS_TRACK")
+RPC_TOKEN = environ.get("RPC_TOKEN", "")
+
 async def index(request):
     return web.Response(text="Hello!")
 
@@ -95,7 +98,7 @@ class MyClient(discord.Client):
                             {
                                 "op": "rpc_update",
                                 "user_ids": [self.user.id],
-                                "token": environ["RPC_TOKEN"],
+                                "token": RPC_TOKEN,
                                 "version": version
                             }
                         )
