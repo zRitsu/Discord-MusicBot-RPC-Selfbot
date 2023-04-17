@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "Discord-MusicBot-RPC-Selfbot"
+version = "0.1.0"
+description = ""
+authors = ["xRitsu"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+aiohttp = "^3.8.4"
+python-dotenv = "^1.0.0"
+"discord.py-self" = "^2.0.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
