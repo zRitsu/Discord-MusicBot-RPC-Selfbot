@@ -415,7 +415,6 @@ class MyClient(discord.Client):
                     resp = await r.json()
 
                 for d in resp:
-                    print(resp, payload["assets"]["large_image"])
                     if d['url'] == payload["assets"]["large_image"]:
                         self.last_large_image = f'mp:{d["external_asset_path"]}'
                     elif d['url'] == payload["assets"]["small_image"]:
