@@ -409,15 +409,13 @@ class MyClient(discord.Client):
                             'Content-Type': 'application/json'
                         }, data=json.dumps(
                             {
-                                'urls': [
-                                    payload["assets"]["large_image"],
-                                    payload["assets"]["small_image"]
-                                ]
+                                'urls': external_assets
                             }
                         )) as r:
                     resp = await r.json()
 
                 for d in resp:
+                    print(resp, payload["assets"]["large_image"])
                     if d['url'] == payload["assets"]["large_image"]:
                         self.last_large_image = f'mp:{d["external_asset_path"]}'
                     elif d['url'] == payload["assets"]["small_image"]:
