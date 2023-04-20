@@ -74,9 +74,32 @@ class MyClient(discord.Client):
         print(f'Logado como: {self.user} [{self.user.id}]')
         self.last_large_image = ""
         self.last_small_image = ""
+
+        await self.connect_vc()
+
         if not self.ws_task:
             self.ws_task = self.loop.create_task(web._run_app(app, host="0.0.0.0", port=os.environ.get("PORT", 80)))
             await self.connect_rpc_ws()
+
+    async def connect_vc(self):
+
+        if not os.environ["AUTO_CHANNEL_CONNECT_ID"]:
+            return
+
+        vc = self.get_channel(int(os.environ["AUTO_CHANNEL_CONNECT_ID"]))
+
+        if not vc:
+            print(f"Canal de voz não encontrado: {os.environ['AUTO_CHANNEL_CONNECT_ID']}")
+            return
+
+        if vc.guild.me.voice:
+            return
+
+        if vc.permissions_for(vc.guild.me).connect:
+            print(f"Sem permissão para conectar no canal: {vc.name}")
+            return
+
+        await vc.connect()
 
     async def connect_rpc_ws(self):
 
@@ -484,6 +507,24 @@ class MyClient(discord.Client):
 
 
 client = MyClient()
+
+@client.event
+async def on_voice_state_update(member, before, after):
+
+    if member.id != client.user.id:
+        return
+
+    if after.channel:
+        return
+
+    try:
+        if member.voice or str(before.channel.id) != os.environ["AUTO_CHANNEL_CONNECT_ID"]:
+            return
+    except:
+        return
+
+    await client.connect_vc()
+
 try:
     client.run(os.environ["TOKEN"])
 except Exception as e:
