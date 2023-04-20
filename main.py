@@ -1,9 +1,9 @@
 import asyncio
 import datetime
 import json
+import os
 import pprint
 import traceback
-from os import environ
 from typing import Union
 
 import aiohttp
@@ -15,8 +15,8 @@ load_dotenv()
 
 version = "2.6.1"
 
-BLOCK_OTHER_USERS_TRACK = environ.get("BLOCK_OTHER_USERS_TRACK")
-RPC_TOKEN = environ.get("RPC_TOKEN", "")
+BLOCK_OTHER_USERS_TRACK = os.environ.get("BLOCK_OTHER_USERS_TRACK")
+RPC_TOKEN = os.environ.get("RPC_TOKEN", "")
 
 async def index(request):
     return web.Response(text="Hello!")
@@ -67,16 +67,15 @@ class RPCActivity(discord.Activity):
 
 
 class MyClient(discord.Client):
-    started = False
+    ws_task = None
     assets = Assets()
 
     async def on_ready(self):
         print(f'Logado como: {self.user} [{self.user.id}]')
         self.last_large_image = ""
         self.last_small_image = ""
-        if not self.started:
-            self.started = True
-            self.loop.create_task(web._run_app(app, host="0.0.0.0", port=environ.get("PORT", 80)))
+        if not self.ws_task:
+            self.ws_task = self.loop.create_task(web._run_app(app, host="0.0.0.0", port=os.environ.get("PORT", 80)))
             await self.connect_rpc_ws()
 
     async def connect_rpc_ws(self):
@@ -86,9 +85,9 @@ class MyClient(discord.Client):
         while True:
 
             try:
-                async with aiohttp.ClientSession().ws_connect(environ["RPC_URL"], heartbeat=30, timeout=120) as ws:
+                async with aiohttp.ClientSession().ws_connect(os.environ["RPC_URL"], heartbeat=30, timeout=120) as ws:
 
-                    print(f"Websocket conectado: {environ['RPC_URL']}")
+                    print(f"Websocket conectado: {os.environ['RPC_URL']}")
 
                     await self.wait_until_ready()
 
@@ -113,7 +112,7 @@ class MyClient(discord.Client):
                                 try:
                                     data = json.loads(msg.data)
                                 except Exception:
-                                    traceback.print_exc()
+                                    print(traceback.format_exc())
                                     continue
 
                                 try:
@@ -121,7 +120,7 @@ class MyClient(discord.Client):
                                         print(data)
                                         continue
                                 except:
-                                    traceback.print_exc()
+                                    print(traceback.format_exc())
                                     continue
 
                                 bot_id = data.pop("bot_id", None)
@@ -129,7 +128,7 @@ class MyClient(discord.Client):
                                 bot_name = data.get("bot_name", "")
 
                                 if data['op'] == "disconnect":
-                                    print(f"op: {data['op']} | {environ['RPC_URL']} | reason: {data.get('reason')}")
+                                    print(f"op: {data['op']} | {os.environ['RPC_URL']} | reason: {data.get('reason')}")
                                     self.closing = True
                                     await ws.close()
                                     return
@@ -158,7 +157,7 @@ class MyClient(discord.Client):
                                               aiohttp.WSMsgType.CLOSING,
                                               aiohttp.WSMsgType.CLOSE):
 
-                                print(f"Conexão finalizada com o servidor: {environ['RPC_URL']}")
+                                print(f"Conexão finalizada com o servidor: {os.environ['RPC_URL']}")
                                 return
 
                             elif msg.type == aiohttp.WSMsgType.ERROR:
@@ -169,7 +168,7 @@ class MyClient(discord.Client):
                                     return
 
                                 print(
-                                    f"Conexão perdida com o servidor: {environ['RPC_URL']} | Reconectando em {time_format(backoff)} seg. {repr(ws.exception())}")
+                                    f"Conexão perdida com o servidor: {os.environ['RPC_URL']} | Reconectando em {time_format(backoff)} seg. {repr(ws.exception())}")
 
                                 await asyncio.sleep(backoff)
                                 backoff *= 1.3
@@ -178,10 +177,10 @@ class MyClient(discord.Client):
                                 print(f"Unknow message type: {msg.type}")
 
                         except:
-                            traceback.print_exc()
+                            print(traceback.format_exc())
 
                     print(
-                        f"Desconectado: {environ['RPC_URL']} | Nova tentativa de conexão em "
+                        f"Desconectado: {os.environ['RPC_URL']} | Nova tentativa de conexão em "
                         f"{time_format(7 * 1000)}..."
                     )
                     await self.change_presence(activity=None)
@@ -192,12 +191,12 @@ class MyClient(discord.Client):
                 tm = backoff * 5
 
                 print(
-                    f"Servidor indisponível: {environ['RPC_URL']} | Nova tentativa de conexão em {time_format(tm * 1000)}.")
+                    f"Servidor indisponível: {os.environ['RPC_URL']} | Nova tentativa de conexão em {time_format(tm * 1000)}.")
                 await asyncio.sleep(tm)
                 backoff *= 2
 
             except Exception:
-                traceback.print_exc()
+                print(traceback.format_exc())
 
     async def process_data(self, user_id: int, bot_id: int, data: dict):
 
@@ -207,7 +206,7 @@ class MyClient(discord.Client):
             try:
                 await self.update(user_id, bot_id, data)
             except:
-                traceback.print_exc()
+                print(traceback.format_exc())
 
         elif data['op'] == "idle":
             payload = self.get_idle_data(bot_id, data)
@@ -405,7 +404,7 @@ class MyClient(discord.Client):
                 async with session.post(
                         f'https://discord.com/api/v9/applications/{bot_id}/external-assets',
                         headers={
-                            'Authorization': environ["TOKEN"],
+                            'Authorization': os.environ["TOKEN"],
                             'Content-Type': 'application/json'
                         }, data=json.dumps(
                             {
@@ -447,7 +446,7 @@ class MyClient(discord.Client):
                 await self.change_presence(activity=activity)
 
         except Exception:
-            traceback.print_exc()
+            print(traceback.format_exc())
             pprint.pprint(payload)
 
     def get_idle_data(self, bot_id: int, data: dict):
@@ -485,4 +484,8 @@ class MyClient(discord.Client):
 
 
 client = MyClient()
-client.run(environ["TOKEN"])
+try:
+    client.run(os.environ["TOKEN"])
+except Exception as e:
+    if e.status == 429 or "429 Too Many Requests" in str(e):
+        os.system("kill 1")
