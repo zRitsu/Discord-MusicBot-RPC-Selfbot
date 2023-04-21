@@ -69,11 +69,11 @@ class RPCActivity(discord.Activity):
 class MyClient(discord.Client):
     ws_task = None
     assets = Assets()
+    last_large_image = ""
+    last_small_image = ""
 
     async def on_ready(self):
         print(f'Logado como: {self.user} [{self.user.id}]')
-        self.last_large_image = ""
-        self.last_small_image = ""
 
         await self.connect_vc()
 
@@ -533,6 +533,8 @@ async def on_voice_state_update(member, before, after):
 
 try:
     client.run(os.environ["TOKEN"])
-except Exception as e:
+except discord.HTTPException as e:
     if e.status == 429 or "429 Too Many Requests" in str(e):
         os.system("kill 1")
+    else:
+        raise e
