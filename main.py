@@ -92,14 +92,14 @@ class MyClient(discord.Client):
             print(f"Canal de voz não encontrado: {os.environ['AUTO_CHANNEL_CONNECT_ID']}")
             return
 
-        if vc.guild.me.voice:
+        if self.user.id in vc.voice_states:
             return
 
         if not vc.permissions_for(vc.guild.me).connect:
             print(f"Sem permissão para conectar no canal: {vc.name}")
             return
 
-        await vc.connect()
+        await vc.connect(reconnect=False)
 
     async def connect_rpc_ws(self):
 
