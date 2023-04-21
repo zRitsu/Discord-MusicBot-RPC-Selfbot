@@ -83,10 +83,10 @@ class MyClient(discord.Client):
 
     async def connect_vc(self):
 
-        if not os.environ["AUTO_CHANNEL_CONNECT_ID"]:
+        try:
+            vc = self.get_channel(int(os.environ["AUTO_CHANNEL_CONNECT_ID"]))
+        except KeyError:
             return
-
-        vc = self.get_channel(int(os.environ["AUTO_CHANNEL_CONNECT_ID"]))
 
         if not vc:
             print(f"Canal de voz não encontrado: {os.environ['AUTO_CHANNEL_CONNECT_ID']}")
