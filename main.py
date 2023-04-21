@@ -517,6 +517,12 @@ async def on_voice_state_update(member, before, after):
     if after.channel:
         return
 
+    else:
+        try:
+            member.guild.voice_client.cleanup()
+        except:
+            pass
+
     try:
         if member.voice or str(before.channel.id) != os.environ["AUTO_CHANNEL_CONNECT_ID"]:
             return
