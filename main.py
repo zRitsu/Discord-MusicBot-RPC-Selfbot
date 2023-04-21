@@ -95,7 +95,7 @@ class MyClient(discord.Client):
         if vc.guild.me.voice:
             return
 
-        if vc.permissions_for(vc.guild.me).connect:
+        if not vc.permissions_for(vc.guild.me).connect:
             print(f"Sem permissão para conectar no canal: {vc.name}")
             return
 
