@@ -346,14 +346,14 @@ class MyClient(discord.Client):
 
             if playlist_name and playlist_url:
 
-                if (playlist_size := len(playlist_name)) > 25:
+                if (playlist_size := len(playlist_name)) > 32:
                     state += f' | Playlist: {playlist_name}'
                     buttons.append(
                         {"label": "Ver Playlist", "url": playlist_url.replace("www.", "")})
 
                 else:
 
-                    if playlist_size < 15:
+                    if playlist_size < 23:
                         playlist_name = f"Playlist: {playlist_name}"
 
                     buttons.append({"label": playlist_name, "url": playlist_url.replace("www.", "")})
@@ -368,13 +368,13 @@ class MyClient(discord.Client):
 
                 if len(buttons) < 2:
 
-                    if (album_size := len(album_name)) > 22:
+                    if (album_size := len(album_name)) > 32:
                         state += f' | Álbum: {album_name}'
                         buttons.append({"label": "Ver álbum", "url": album_url.replace("www.", "")})
 
                     else:
 
-                        if album_size < 17:
+                        if album_size < 25:
                             album_name = f"Álbum: {album_name}"
 
                         buttons.append({"label": album_name, "url": album_url})
